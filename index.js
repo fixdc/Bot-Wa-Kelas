@@ -29,8 +29,12 @@ const client = new Client({
 });
 
 client.on('qr', (qr) => {
-    console.log("Silakan Scan QR Code di bawah ini dengan WhatsApp di HP bot Anda:");
-    qrcode.generate(qr, { small: true });
+    console.log("==================================================");
+    console.log("↓↓↓ SALIN SEMUA TEKS DI BAWAH INI ↓↓↓");
+    console.log(qr); // HANYA TAMPILKAN DATA TEKSNYA
+    console.log("↑↑↑ SALIN SEMUA TEKS DI ATAS INI ↑↑↑");
+    console.log("==================================================");
+    console.log("Lalu paste di website QR Code Generator.");
 });
 
 client.on('ready', () => {
