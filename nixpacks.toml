@@ -1,19 +1,25 @@
-# nixpacks.toml
+# nixpacks.toml (Versi Lengkap Final)
 
 [phases.setup]
-# Ini adalah daftar paket sistem yang dibutuhkan Puppeteer/Chrome agar bisa berjalan
 nixPkgs = [
-    "chromium", 
-    "nss", 
-    "alsa-lib", 
-    "atk",
+    "glib",
+    "nss",
+    "nspr",
+    "gdk-pixbuf",
     "cairo",
-    "cups",
-    "gdk-pixbuf", 
-    "gtk3", 
     "pango",
-    "xdg-utils",
-    "libxkbcommon",
+    "gtk3",
+    "cups",
+    "libepoxy",
     "libdrm",
-    "mesa"
+    "mesa",
+    "alsa-lib",
+    "at-spi2-atk",
+    "libxkbcommon",
+    "libxcomposite",
+    "libxdamage",
+    "libxfixes",
+    "libxrandr",
+    "libxcursor",
+    "chromium"
 ]
