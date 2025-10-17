@@ -11,6 +11,8 @@ const NOMOR_ADMINS = ['6281319449299', '6281234567890'];
 // Lokasi file "database" kita
 const LOKASI_FILE_TUGAS = './tugas.txt';
 const LOKASI_FILE_KAS = './kas.txt';
+const LOKASI_FILE_INFO = './informasi.txt';
+const LOKASI_FILE_TODO = './todo.txt';
 // -------------------
 
 console.log("🤖 Memulai Bot...");
@@ -58,6 +60,19 @@ function bacaFile(path) {
     }
 }
 
+// Teks bantuan
+const teksBantuan = `
+📖 *DAFTAR PERINTAH BOT* 📖
+
+*Check This Out:*
+- *.help* : Menampilkan pesan ini.
+- *.tugas* : Melihat daftar tugas kelas.
+- *.kas* : Melihat info uang kas.
+- *.info* : Melihat informasi penting.
+- *.todo* : Melihat to-do list atau agenda.
+
+`;
+
 client.on('message', async (msg) => {
     const text = msg.body.toLowerCase() || '';
     const senderNumber = msg.from.replace('@c.us', '');
@@ -67,17 +82,30 @@ client.on('message', async (msg) => {
     // === PERINTAH UNTUK SEMUA ORANG ===
     // ==================================================
 
-    // Melihat daftar tugas
-    if (text === '.tugas') {
-        const daftarTugas = bacaFile(LOKASI_FILE_TUGAS);
-        msg.reply(daftarTugas.trim() === '' ? "🎉 Hore! Tidak ada tugas." : `📚 *DAFTAR TUGAS*\n\n${daftarTugas}`);
+    if (text === '.help') {
+        msg.reply(teksBantuan);
     }
 
-    // Melihat daftar yang belum bayar kas
-    if (text === '.kas') {
-        const daftarKas = bacaFile(LOKASI_FILE_KAS);
-        msg.reply(daftarKas.trim() === '' ? "👍 Mantap! Semua sudah lunas." : `💰 *INFO UANG KAS*\n\nYang belum lunas:\n${daftarKas}`);
+    if (text === '.tugas') {
+        const data = bacaFile(LOKASI_FILE_TUGAS);
+        msg.reply(data.trim() === '' ? "🎉 Hore! Tidak ada tugas." : `📚 *DAFTAR TUGAS*\n\n${data}`);
     }
+
+    if (text === '.kas') {
+        const data = bacaFile(LOKASI_FILE_KAS);
+        msg.reply(data.trim() === '' ? "👍 Mantap! Semua sudah lunas." : `💰 *INFO UANG KAS*\n\nYang belum lunas:\n${data}`);
+    }
+
+    if (text === '.info') {
+        const data = bacaFile(LOKASI_FILE_INFO);
+        msg.reply(data.trim() === '' ? "ℹ️ Belum ada informasi." : `📢 *INFORMASI PENTING*\n\n${data}`);
+    }
+
+    if (text === '.todo') {
+        const data = bacaFile(LOKASI_FILE_TODO);
+        msg.reply(data.trim() === '' ? "✅ Semua agenda selesai." : `📋 *TO-DO LIST & AGENDA*\n\n${data}`);
+    }
+
 
     // ==================================================
     // === PERINTAH KHUSUS ADMIN ===
@@ -85,8 +113,6 @@ client.on('message', async (msg) => {
     if (isAdmin) {
         
         // --- CRUD TUGAS ---
-
-        // (Create) Menambah satu tugas baru
         if (text.startsWith('.tambah_tugas ')) {
             const tugasBaru = msg.body.substring(13);
             const tugasLama = bacaFile(LOKASI_FILE_TUGAS);
@@ -94,38 +120,53 @@ client.on('message', async (msg) => {
             fs.writeFileSync(LOKASI_FILE_TUGAS, kontenBaru, 'utf-8');
             msg.reply(`✅ Tugas baru ditambahkan:\n- ${tugasBaru}`);
         }
-
-        // (Update) Mengganti seluruh daftar tugas
         if (text.startsWith('.update_tugas ')) {
-            const kontenTugasBaru = msg.body.substring(14);
-            const tugasTerformat = '- ' + kontenTugasBaru.split(';').map(item => item.trim()).join('\n- ');
-            fs.writeFileSync(LOKASI_FILE_TUGAS, tugasTerformat, 'utf-8');
+            const konten = msg.body.substring(14);
+            const format = '- ' + konten.split(';').map(item => item.trim()).join('\n- ');
+            fs.writeFileSync(LOKASI_FILE_TUGAS, format, 'utf-8');
             msg.reply('✅ Seluruh daftar tugas berhasil diperbarui!');
         }
-
-        // (Delete) Menghapus semua tugas
         if (text === '.hapus_semua_tugas') {
             fs.writeFileSync(LOKASI_FILE_TUGAS, '', 'utf-8');
             msg.reply('🗑️ Semua tugas berhasil dihapus!');
         }
 
-
         // --- CRUD KAS ---
-
-        // (Create/Update) Mengganti seluruh daftar kas
         if (text.startsWith('.update_kas ')) {
-            const kontenKasBaru = msg.body.substring(12);
-            const kasTerformat = '- ' + kontenKasBaru.split(';').map(item => item.trim()).join('\n- ');
-            fs.writeFileSync(LOKASI_FILE_KAS, kasTerformat, 'utf-8');
+            const konten = msg.body.substring(12);
+            const format = '- ' + konten.split(';').map(item => item.trim()).join('\n- ');
+            fs.writeFileSync(LOKASI_FILE_KAS, format, 'utf-8');
             msg.reply('✅ Daftar kas berhasil diperbarui!');
         }
-
-        // (Delete) Menghapus semua data kas
         if (text === '.hapus_kas') {
             fs.writeFileSync(LOKASI_FILE_KAS, '', 'utf-8');
             msg.reply('🗑️ Semua data kas berhasil dihapus!');
+        }
+        
+        // --- CRUD INFO ---
+        if (text.startsWith('.update_info ')) {
+            const konten = msg.body.substring(13);
+            fs.writeFileSync(LOKASI_FILE_INFO, konten, 'utf-8');
+            msg.reply('✅ Informasi berhasil diperbarui!');
+        }
+        if (text === '.hapus_info') {
+            fs.writeFileSync(LOKASI_FILE_INFO, '', 'utf-8');
+            msg.reply('🗑️ Informasi berhasil dihapus!');
+        }
+
+        // --- CRUD TODO ---
+        if (text.startsWith('.update_todo ')) {
+            const konten = msg.body.substring(13);
+            const format = '- ' + konten.split(';').map(item => item.trim()).join('\n- ');
+            fs.writeFileSync(LOKASI_FILE_TODO, format, 'utf-8');
+            msg.reply('✅ To-do list berhasil diperbarui!');
+        }
+        if (text === '.hapus_todo') {
+            fs.writeFileSync(LOKASI_FILE_TODO, '', 'utf-8');
+            msg.reply('🗑️ To-do list berhasil dihapus!');
         }
     }
 });
 
 client.initialize();
+
