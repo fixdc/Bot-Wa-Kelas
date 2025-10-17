@@ -6,7 +6,7 @@ const fs = require('fs');
 
 // ❗ PENTING: Daftar nomor admin. Anda bisa menambah nomor lain di sini.
 // Format harus 62... dan dalam tanda kutip. Pisahkan dengan koma.
-const NOMOR_ADMINS = ['6281319449299', '6281234567890']; 
+const NOMOR_ADMINS = ['6281319449299', '6282129499789', '6281267078789']; 
 
 // Lokasi file "database" kita
 const LOKASI_FILE_TUGAS = './tugas.txt';
