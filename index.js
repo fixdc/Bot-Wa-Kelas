@@ -129,7 +129,7 @@ Berikut adalah perintah yang bisa kamu gunakan:
 📖 *.help / .axa*
    > Menampilkan daftar perintah ini.
 
-🗃️ *.jadwal* (in progress)
+🗃️ *.jadwal*
    > Menampilkan jadwal perkuliahan.
 
 📝 *.tugas*
