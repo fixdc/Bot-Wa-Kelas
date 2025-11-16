@@ -202,8 +202,6 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
         try {
             // Cek apakah file ada
             if (fs.existsSync(LOKASI_FILE_KALENDER_LOKAL)) {
-                msg.reply("⏳ Sedang mengambil gambar kalender...");
-                // Mengambil media dari file lokal
                 const media = MessageMedia.fromFilePath(LOKASI_FILE_KALENDER_LOKAL);
                 client.sendMessage(msg.from, media, { caption: 'Ini dia kalender perkuliahannya. 🗓️' });
             } else {
