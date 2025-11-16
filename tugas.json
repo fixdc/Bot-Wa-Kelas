@@ -1,51 +1,26 @@
 [
   {
-    "nama": "💻 *Jaringan Komputer*",
+    "nama": "Jaringan Komputer",
     "tugas": [
       {
-        "deskripsi": "E-Learning Pertemuan 9",
-        "deadline": "17 Okt 23:59",
-        "catatan": "Tidak ada catatan"
+        "deskripsi": "Routing P2P",
+        "deadline": "E-Learning (Tugas Terstruktur 10)",
+        "catatan": "Format .RAR ..."
+      },
+      {
+        "deskripsi": "Laporan Materi Lab (salah satu materi)",
+        "deadline": "Saat UTS",
+        "catatan": "Printout (1 muka)"
       }
     ]
   },
   {
-    "nama": "💾 *Struktur Data*",
+    "nama": "Struktur Data",
     "tugas": [
       {
-        "deskripsi": "E-Learning Pertemuan 9",
-        "deadline": "17 Okt 23:59",
-        "catatan": "Tidak ada catatan"
-      }
-    ]
-  },
-  {
-    "nama": "⌨️ *Algoritma dan Pemrograman II*",
-    "tugas": [
-      {
-        "deskripsi": "E-Learning Pertemuan 9",
-        "deadline": "17 Okt 23:59",
-        "catatan": "Tidak ada catatan"
-      }
-    ]
-  },
-  {
-    "nama": "📊 *Statistika dan Probabilitas*",
-    "tugas": [
-      {
-        "deskripsi": "E-Learning Pertemuan 9",
-        "deadline": "17 Okt 23:59",
-        "catatan": "Tidak ada catatan"
-      }
-    ]
-  },
-  {
-    "nama": "📐 *Aljabar & Linear*",
-    "tugas": [
-      {
-        "deskripsi": "Latihan Soal",
-        "deadline": "Rabu, 22 Oktober 2025",
-        "catatan": "Kumpul ke dosen"
+        "deskripsi": "Laporan Pembelajaran LAB (P2, P4, P5, P7, P8, P10)",
+        "deadline": "Saat UTS",
+        "catatan": "Printout (1 muka). Template: Logo, NIM, NAMA, KELAS, PRODI, FAKULTAS, 2025. Isi per pertemuan: MATERI, LATIHAN (DI SKRIPSI, SOURCE CODE, OUTPUT), TUGAS (DI SKRIPSI, SOURCE CODE, OUTPUT)."
       }
     ]
   }
