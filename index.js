@@ -1,4 +1,4 @@
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js'); // <-- Pastikan MessageMedia ada
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js'); // <-- BARU: Menambahkan MessageMedia
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 
@@ -6,12 +6,12 @@ const fs = require('fs');
 const NOMOR_ADMINS = ['6281319449299', '6282129499789', '6281267078789']; 
 
 // Lokasi file "database" kita
-const LOKASI_FILE_TUGAS_JSON = './tugas.json';
+const LOKASI_FILE_TUGAS_JSON = './tugas.json'; 
 const LOKASI_FILE_KAS = './kas.txt';
 const LOKASI_FILE_INFO = './informasi.txt';
 const LOKASI_FILE_TODO = './todo.txt';
 const LOKASI_FILE_SALDO = './saldo.txt';
-const LOKASI_FILE_KALENDER_URL = './kalender_url.txt'; // <-- FILE BARU
+const LOKASI_FILE_KALENDER_URL = './kalender_url.txt';
 // -------------------
 
 console.log("🤖 Memulai Bot...");
@@ -31,6 +31,7 @@ const client = new Client({
             '--disable-gpu'
         ],
     },
+    // --- PENAMBAHAN BARU UNTUK STABILITAS ---
     restartOnAuthFail: true,
     webVersionCache: {
         type: 'remote',
@@ -51,10 +52,12 @@ client.on('ready', () => {
     console.log('✅ Bot WhatsApp berhasil terhubung dan siap digunakan!');
 });
 
+// BARU: Penanganan error autentikasi
 client.on('auth_failure', msg => {
     console.error('AUTHENTICATION FAILURE', msg);
 });
 
+// BARU: Penanganan diskonek
 client.on('disconnected', (reason) => {
     console.log('Client was logged out', reason);
     client.destroy();
@@ -86,7 +89,7 @@ function tulisFile(path, konten) {
     }
 }
 
-// Teks bantuan yang diperbarui
+// Teks bantuan yang sudah diperbarui
 const teksBantuan = `🤖 *HEXABOT - Asisten Kelas* 🤖
 ---------------------------------------------
 Hai! Aku Hexabot, siap membantumu.
@@ -96,7 +99,7 @@ Berikut adalah perintah yang bisa kamu gunakan:
    > Menampilkan daftar perintah ini.
 
 📝 *.tugas*
-   > Melihat daftar tugas terstruktur.
+   > Melihat daftar tugas terbaru (format baru).
 
 💰 *.kas*
    > Menampilkan laporan keuangan & kas kelas.
@@ -105,7 +108,7 @@ Berikut adalah perintah yang bisa kamu gunakan:
    > Menampilkan informasi penting.
 
 ✅ *.todo*
-   > Melihat agenda atau rencana kegiatan kelas.
+   > Melihat agenda atau rencana kelas.
 
 🗓️ *.kalender*
    > Menampilkan gambar kalender perkuliahan.
@@ -121,44 +124,42 @@ client.on('message', async (msg) => {
     // ==================================================
     // === PERINTAH UNTUK SEMUA ORANG ===
     // ==================================================
+
     if (text === '.help') {
         msg.reply(teksBantuan);
     } 
     
     else if (text === '.tugas') {
-        const dataTugas = bacaFile(LOKASI_FILE_TUGAS_JSON);
-        if (dataTugas) {
-            try {
-                const tugasJson = JSON.parse(dataTugas);
-                if (tugasJson.length === 0) {
-                    msg.reply("🎉 Hore! Tidak ada tugas saat ini.");
-                    return;
-                }
-
-                let pesanTugas = "📚 *KUMPULAN TUGAS AKTIF* 📚\n";
-                pesanTugas += "-----------------------------------------\n\n";
-
-                tugasJson.forEach(matkul => {
-                    pesanTugas += `${matkul.nama}\n`; // Menggunakan nama matkul dari JSON
-                    matkul.tugas.forEach((t, index) => {
-                        const nomorEmoji = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
-                        pesanTugas += `   ${nomorEmoji[index] || (index + 1) + '️⃣'} Tugas: ${t.deskripsi}\n`;
-                        pesanTugas += `       > Deadline: ${t.deadline}\n`;
-                        pesanTugas += `       > Catatan: ${t.catatan}\n\n`;
-                    });
-                });
-
-                pesanTugas += "-----------------------------------------\n";
-                pesanTugas += "_Periksa kembali detail tugas sebelum dikumpulkan._";
-                msg.reply(pesanTugas);
-
-            } catch (error) {
-                console.error("Error parsing tugas.json:", error);
-                msg.reply("Format data tugas sepertinya rusak. Mohon minta admin untuk memperbaikinya dengan `.update_tugas`");
+        try {
+            const tugasData = JSON.parse(bacaFile(LOKASI_FILE_TUGAS_JSON) || '[]');
+            if (tugasData.length === 0) {
+                msg.reply("🎉 Hore! Tidak ada tugas saat ini.");
+                return;
             }
-        } else {
-             msg.reply("🎉 Hore! Tidak ada tugas saat ini.");
+    
+            let pesanTugas = `📚 *KUMPULAN TUGAS AKTIF* 📚
+-----------------------------------------`;
+    
+            const nomorEmoji = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
+    
+            tugasData.forEach(matkul => {
+                pesanTugas += `\n\n${matkul.nama}`;
+                matkul.tugas.forEach((item, index) => {
+                    pesanTugas += `\n   ${nomorEmoji[index] || (index + 1) + '️⃣'} Tugas: ${item.deskripsi}`;
+                    pesanTugas += `\n       > Deadline: ${item.deadline}`;
+                    pesanTugas += `\n       > Catatan: ${item.catatan}`;
+                });
+            });
+    
+            pesanTugas += `\n\n-----------------------------------------
+_Periksa kembali detail tugas sebelum dikumpulkan._`;
+    
+            msg.reply(pesanTugas);
+        } catch (error) {
+            console.error(error);
+            msg.reply("Format data tugas sepertinya rusak. Mohon minta admin untuk memperbaikinya dengan `.update_tugas`");
         }
+
     } 
     
     else if (text === '.kas') {
@@ -200,7 +201,6 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
         msg.reply(data.trim() === '' ? "✅ Semua agenda selesai." : `📋 *TO-DO LIST & AGENDA*\n\n${data}`);
     }
 
-    // --- PERINTAH BARU UNTUK KIRIM GAMBAR KALENDER ---
     else if (text === '.kalender') {
         const url = bacaFile(LOKASI_FILE_KALENDER_URL);
         if (url && url.trim() !== '') {
@@ -217,25 +217,27 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
         }
     }
 
+
+
     // ==================================================
     // === PERINTAH KHUSUS ADMIN ===
     // ==================================================
     if (isAdmin) {
         
-        // Cek jika perintah tugas
+        // (Kode .update_tugas Anda... tidak saya ubah)
         if (msg.body.startsWith('.update_tugas\n') || msg.body.startsWith('.update_tugas ')) {
             try {
-                const dataMentah = msg.body.substring(msg.body.indexOf(' ')).trim(); // Ambil semua setelah spasi/newline pertama
+                const dataMentah = msg.body.substring(msg.body.indexOf(' ')).trim(); 
                 const dataFinal = [];
 
                 const blokMatkul = dataMentah.split('///');
 
                 blokMatkul.forEach(blok => {
                     const baris = blok.trim().split('\n');
-                    const namaMatkul = baris.shift().trim(); // Ambil baris pertama sebagai nama matkul
+                    const namaMatkul = baris.shift().trim(); 
                     
                     const tugasList = [];
-                    let tugasStrings = baris.join('\n').split(';;'); // Gabungkan sisanya dan pisah per tugas
+                    let tugasStrings = baris.join('\n').split(';;'); 
 
                     const tugasObjek = {
                         nama: namaMatkul,
@@ -275,7 +277,6 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
             }
         }
         
-        // Cek jika perintah kas
         else if (text.startsWith('.update_kas ')) {
             const konten = msg.body.substring(12);
             const format = konten.split(';').map(item => item.trim()).join('\n');
@@ -290,7 +291,6 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
             }
         }
 
-        // Cek jika perintah saldo
         else if (text.startsWith('.update_saldo ')) {
             const saldo = msg.body.substring(14);
             if (tulisFile(LOKASI_FILE_SALDO, saldo)) {
@@ -304,7 +304,6 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
             }
         }
         
-        // Cek jika perintah info
         else if (text.startsWith('.update_info ')) {
             const konten = msg.body.substring(13);
             if (tulisFile(LOKASI_FILE_INFO, konten)) {
@@ -318,9 +317,8 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
             }
         }
 
-        // Cek jika perintah todo
         else if (text.startsWith('.update_todo ')) {
-            const konten = msg.body.substring(12); // Ambil semua teks setelah .update_todo
+            const konten = msg.body.substring(12); 
             if(tulisFile(LOKASI_FILE_TODO, konten)) {
                 msg.reply('✅ To-do list berhasil diperbarui!');
             }
@@ -332,13 +330,13 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
             }
         }
 
-        // Cek jika perintah kalender
         else if (text.startsWith('.update_kalender ')) {
             const url = msg.body.substring(17);
             if (tulisFile(LOKASI_FILE_KALENDER_URL, url.trim())) {
                 msg.reply('✅ Link gambar kalender berhasil diperbarui!');
             } else {
                 msg.reply('❌ Gagal menyimpan link kalender.');
+            Info
             }
         }
 
