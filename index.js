@@ -87,6 +87,39 @@ function tulisFile(path, konten) {
     }
 }
 
+const teksJadwal = `── .✦ JADWAL MATA KULIAH ⊹₊⟡⋆
+---------------------------------------------
+🖥️ SENIN
+➪ Sistem Berkas  (10:30-12:10)
+Samsoni S.Kom., M.Kom
+085929854648
+
+🖥️ SELASA
+➪ Jaringan Komputer  (07:10-08:50)
+Hidayatullah Al Islami S.Kom., M.Kom
+082113214440
+➪ Matematika Diskrit (08:50-10:30)
+Yolen Perdana Sari S.T,. M.T
+081321509820
+➪ Graph Terapan  (10:30-12:10)
+Abdullah Muhajir S.Kom., M.Ko 
+089616434884
+➪ Struktur Data  (14:40-16:20)
+Farida Nurlaila S.Kom., M.Kom
+085885928025
+
+🖥️ RABU
+➪ Algoritma dan Pemrograman II  (07:10-08:50)
+Fitri Yanti K.Kom., M.Kom 
+085218562646
+➪ Aljabar Linier dan Matriks  (08:50-10:30)
+Widyah Novania S.Pd., M.Pd
+081387946856
+➪ Statiska dan Probabilitas  (10:30-12:10)
+Yeskarwani Gulo S.Kom., M.Kom
+082388891691
+`
+
 // Teks bantuan yang diperbarui (perintah admin kalender dihapus)
 const teksBantuan = `🤖 *HEXABOT - Asisten Kelas* 🤖
 ---------------------------------------------
@@ -127,7 +160,11 @@ client.on('message', async (msg) => {
     // ==================================================
     if (text === '.help' || text === '.axa') {
         msg.reply(teksBantuan);
-    } 
+    }
+
+    if (text === '.jadwal') {
+        msg.reply(teksJadwal);
+    }
     
     else if (text === '.tugas') {
         const dataTugas = bacaFile(LOKASI_FILE_TUGAS_JSON);
