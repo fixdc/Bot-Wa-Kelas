@@ -93,8 +93,11 @@ const teksBantuan = `🤖 *HEXABOT - Asisten Kelas* 🤖
 Hai! Aku Hexabot, siap membantumu.
 Berikut adalah perintah yang bisa kamu gunakan:
 
-📖 *.help*
+📖 *.help / .axa*
    > Menampilkan daftar perintah ini.
+
+🗃️ *.jadwal* (in progress)
+   > Menampilkan jadwal perkuliahan.
 
 📝 *.tugas*
    > Melihat daftar tugas terstruktur.
@@ -122,7 +125,7 @@ client.on('message', async (msg) => {
     // ==================================================
     // === PERINTAH UNTUK SEMUA ORANG ===
     // ==================================================
-    if (text === '.help') {
+    if (text === '.help' || text === '.axa') {
         msg.reply(teksBantuan);
     } 
     
