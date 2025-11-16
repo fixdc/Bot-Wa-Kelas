@@ -1,17 +1,18 @@
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js'); // <-- BARU: Menambahkan MessageMedia
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js'); // <-- Pastikan MessageMedia ada
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
+const path = require('path'); // <-- Modul baru untuk menangani path file
 
 // --- PENGATURAN BOT ---
 const NOMOR_ADMINS = ['6281319449299', '6282129499789', '6281267078789']; 
 
 // Lokasi file "database" kita
-const LOKASI_FILE_TUGAS_JSON = './tugas.json'; 
+const LOKASI_FILE_TUGAS_JSON = './tugas.json';
 const LOKASI_FILE_KAS = './kas.txt';
 const LOKASI_FILE_INFO = './informasi.txt';
 const LOKASI_FILE_TODO = './todo.txt';
 const LOKASI_FILE_SALDO = './saldo.txt';
-const LOKASI_FILE_KALENDER_URL = './kalender_url.txt';
+const LOKASI_FILE_KALENDER_LOKAL = './kalender.jpeg'; // <-- PATH BARU KE FILE LOKAL
 // -------------------
 
 console.log("🤖 Memulai Bot...");
@@ -31,7 +32,6 @@ const client = new Client({
             '--disable-gpu'
         ],
     },
-    // --- PENAMBAHAN BARU UNTUK STABILITAS ---
     restartOnAuthFail: true,
     webVersionCache: {
         type: 'remote',
@@ -52,12 +52,10 @@ client.on('ready', () => {
     console.log('✅ Bot WhatsApp berhasil terhubung dan siap digunakan!');
 });
 
-// BARU: Penanganan error autentikasi
 client.on('auth_failure', msg => {
     console.error('AUTHENTICATION FAILURE', msg);
 });
 
-// BARU: Penanganan diskonek
 client.on('disconnected', (reason) => {
     console.log('Client was logged out', reason);
     client.destroy();
@@ -89,7 +87,7 @@ function tulisFile(path, konten) {
     }
 }
 
-// Teks bantuan yang sudah diperbarui
+// Teks bantuan yang diperbarui (perintah admin kalender dihapus)
 const teksBantuan = `🤖 *HEXABOT - Asisten Kelas* 🤖
 ---------------------------------------------
 Hai! Aku Hexabot, siap membantumu.
@@ -99,7 +97,7 @@ Berikut adalah perintah yang bisa kamu gunakan:
    > Menampilkan daftar perintah ini.
 
 📝 *.tugas*
-   > Melihat daftar tugas terbaru (format baru).
+   > Melihat daftar tugas terstruktur.
 
 💰 *.kas*
    > Menampilkan laporan keuangan & kas kelas.
@@ -108,12 +106,12 @@ Berikut adalah perintah yang bisa kamu gunakan:
    > Menampilkan informasi penting.
 
 ✅ *.todo*
-   > Melihat agenda atau rencana kelas.
+   > Melihat agenda atau rencana kegiatan kelas.
 
 🗓️ *.kalender*
    > Menampilkan gambar kalender perkuliahan.
----------------------------------------------
-`;
+   
+---------------------------------------------`;
 
 
 client.on('message', async (msg) => {
@@ -124,42 +122,40 @@ client.on('message', async (msg) => {
     // ==================================================
     // === PERINTAH UNTUK SEMUA ORANG ===
     // ==================================================
-
     if (text === '.help') {
         msg.reply(teksBantuan);
     } 
     
     else if (text === '.tugas') {
-        try {
-            const tugasData = JSON.parse(bacaFile(LOKASI_FILE_TUGAS_JSON) || '[]');
-            if (tugasData.length === 0) {
-                msg.reply("🎉 Hore! Tidak ada tugas saat ini.");
-                return;
-            }
-    
-            let pesanTugas = `📚 *KUMPULAN TUGAS AKTIF* 📚
------------------------------------------`;
-    
-            const nomorEmoji = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
-    
-            tugasData.forEach(matkul => {
-                pesanTugas += `\n\n${matkul.nama}`;
-                matkul.tugas.forEach((item, index) => {
-                    pesanTugas += `\n   ${nomorEmoji[index] || (index + 1) + '️⃣'} Tugas: ${item.deskripsi}`;
-                    pesanTugas += `\n       > Deadline: ${item.deadline}`;
-                    pesanTugas += `\n       > Catatan: ${item.catatan}`;
+        const dataTugas = bacaFile(LOKASI_FILE_TUGAS_JSON);
+        if (dataTugas) {
+            try {
+                const tugasJson = JSON.parse(dataTugas);
+                if (tugasJson.length === 0) {
+                    msg.reply("🎉 Hore! Tidak ada tugas saat ini.");
+                    return;
+                }
+                let pesanTugas = "📚 *KUMPULAN TUGAS AKTIF* 📚\n";
+                pesanTugas += "-----------------------------------------\n\n";
+                tugasJson.forEach(matkul => {
+                    pesanTugas += `${matkul.nama}\n`; 
+                    matkul.tugas.forEach((t, index) => {
+                        const nomorEmoji = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
+                        pesanTugas += `   ${nomorEmoji[index] || (index + 1) + '️⃣'} Tugas: ${t.deskripsi}\n`;
+                        pesanTugas += `       > Deadline: ${t.deadline}\n`;
+                        pesanTugas += `       > Catatan: ${t.catatan}\n\n`;
+                    });
                 });
-            });
-    
-            pesanTugas += `\n\n-----------------------------------------
-_Periksa kembali detail tugas sebelum dikumpulkan._`;
-    
-            msg.reply(pesanTugas);
-        } catch (error) {
-            console.error(error);
-            msg.reply("Format data tugas sepertinya rusak. Mohon minta admin untuk memperbaikinya dengan `.update_tugas`");
+                pesanTugas += "-----------------------------------------\n";
+                pesanTugas += "_Periksa kembali detail tugas sebelum dikumpulkan._";
+                msg.reply(pesanTugas);
+            } catch (error) {
+                console.error("Error parsing tugas.json:", error);
+                msg.reply("Format data tugas sepertinya rusak. Mohon minta admin untuk memperbaikinya dengan `.update_tugas`");
+            }
+        } else {
+             msg.reply("🎉 Hore! Tidak ada tugas saat ini.");
         }
-
     } 
     
     else if (text === '.kas') {
@@ -168,10 +164,8 @@ _Periksa kembali detail tugas sebelum dikumpulkan._`;
         const tanggalHariIni = new Date().toLocaleDateString('id-ID', {
             day: 'numeric', month: 'long', year: 'numeric'
         });
-
         const saldoTampilan = saldo.trim() === '' ? '0' : saldo;
         const kasTampilan = daftarKas.trim() === '' ? '👍 _Semua iuran sudah tercatat._' : daftarKas.split('\n').map(nama => `🔴 ${nama.replace('-', '').trim()}`).join('\n');
-
         const pesanLaporan = `📊 *LAPORAN KEUANGAN KELAS* 📊
 _Data per ${tanggalHariIni}_
 ---------------------------------------------
@@ -185,9 +179,8 @@ Berikut adalah daftar nama yang iurannya belum tercatat di sistem:
 
 ${kasTampilan}
 
-Untuk pembayaran atau konfirmasi, silakan hubungi Bendahara *Grania*😏 dan *Fandi*😎.
+Untuk pembayaran atau konfirmasi, silakan hubungi Bendahara (*Grania*😏 & *Fandi*😎).
 Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
-
         msg.reply(pesanLaporan);
     } 
     
@@ -201,49 +194,42 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
         msg.reply(data.trim() === '' ? "✅ Semua agenda selesai." : `📋 *TO-DO LIST & AGENDA*\n\n${data}`);
     }
 
+    // --- PERINTAH .KALENDER (VERSI STATIS) ---
     else if (text === '.kalender') {
-        const url = bacaFile(LOKASI_FILE_KALENDER_URL);
-        if (url && url.trim() !== '') {
-            try {
+        try {
+            // Cek apakah file ada
+            if (fs.existsSync(LOKASI_FILE_KALENDER_LOKAL)) {
                 msg.reply("⏳ Sedang mengambil gambar kalender...");
-                const media = await MessageMedia.fromUrl(url.trim());
+                // Mengambil media dari file lokal
+                const media = MessageMedia.fromFilePath(LOKASI_FILE_KALENDER_LOKAL);
                 client.sendMessage(msg.from, media, { caption: 'Ini dia kalender perkuliahannya. 🗓️' });
-            } catch (error) {
-                console.error("Gagal mengambil media dari URL:", error);
-                msg.reply("❌ Maaf, gagal mengambil gambar dari link. Pastikan link-nya adalah link gambar langsung yang valid (berakhiran .jpg atau .png).");
+            } else {
+                msg.reply("❌ File `kalender.jpeg` tidak ditemukan di server bot. Mohon hubungi admin.");
             }
-        } else {
-            msg.reply("ℹ️ Admin belum menambahkan link gambar kalender. Minta admin untuk menambahkannya dengan `.update_kalender [link_gambar]`");
+        } catch (error) {
+            console.error("Gagal mengirim media lokal:", error);
+            msg.reply("❌ Maaf, terjadi kesalahan saat mencoba mengirim gambar kalender.");
         }
     }
-
-
 
     // ==================================================
     // === PERINTAH KHUSUS ADMIN ===
     // ==================================================
     if (isAdmin) {
         
-        // (Kode .update_tugas Anda... tidak saya ubah)
         if (msg.body.startsWith('.update_tugas\n') || msg.body.startsWith('.update_tugas ')) {
             try {
                 const dataMentah = msg.body.substring(msg.body.indexOf(' ')).trim(); 
                 const dataFinal = [];
-
                 const blokMatkul = dataMentah.split('///');
-
                 blokMatkul.forEach(blok => {
                     const baris = blok.trim().split('\n');
                     const namaMatkul = baris.shift().trim(); 
-                    
-                    const tugasList = [];
                     let tugasStrings = baris.join('\n').split(';;'); 
-
                     const tugasObjek = {
                         nama: namaMatkul,
                         tugas: []
                     };
-
                     tugasStrings.forEach(tugasString => {
                         const detail = tugasString.trim().split('|');
                         if (detail.length === 3) {
@@ -254,12 +240,10 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
                             });
                         }
                     });
-                    
                     if (tugasObjek.tugas.length > 0) {
                        dataFinal.push(tugasObjek);
                     }
                 });
-                
                 if (tulisFile(LOKASI_FILE_TUGAS_JSON, JSON.stringify(dataFinal, null, 2))) {
                     msg.reply('✅ Seluruh daftar tugas dengan format baru berhasil diperbarui!');
                 } else {
@@ -318,7 +302,7 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
         }
 
         else if (text.startsWith('.update_todo ')) {
-            const konten = msg.body.substring(12); 
+            const konten = msg.body.substring(12);
             if(tulisFile(LOKASI_FILE_TODO, konten)) {
                 msg.reply('✅ To-do list berhasil diperbarui!');
             }
@@ -330,23 +314,6 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
             }
         }
 
-        else if (text.startsWith('.update_kalender ')) {
-            const url = msg.body.substring(17);
-            if (tulisFile(LOKASI_FILE_KALENDER_URL, url.trim())) {
-                msg.reply('✅ Link gambar kalender berhasil diperbarui!');
-            } else {
-                msg.reply('❌ Gagal menyimpan link kalender.');
-            Info
-            }
-        }
-
-        else if (text === '.hapus_kalender') {
-            if (tulisFile(LOKASI_FILE_KALENDER_URL, '')) {
-                msg.reply('🗑️ Link kalender berhasil dihapus!');
-            } else {
-                msg.reply('❌ Gagal menghapus link kalender.');
-            }
-        }
     }
 });
 
