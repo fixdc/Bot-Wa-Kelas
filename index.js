@@ -362,7 +362,7 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
         } 
         else if (text === '.hapus_todo') {
             if(tulisFile(LOKASI_FILE_TODO, '')) {
-                msg.reply('🗑️ To-do list berhasil dihapus!');
+                msg.reply('🗑️ To-do list berhasil dihapuss!');
             }
         }
     }
