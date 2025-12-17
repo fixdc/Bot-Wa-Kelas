@@ -1,18 +1,17 @@
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js'); // <-- Pastikan MessageMedia ada
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js'); 
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
-const path = require('path'); // <-- Modul baru untuk menangani path file
 
 // --- PENGATURAN BOT ---
 const NOMOR_ADMINS = ['6281319449299', '6282129499789', '6281267078789']; 
 
-// Lokasi file "database" kita
+// Lokasi file "database"
 const LOKASI_FILE_TUGAS_JSON = './tugas.json';
 const LOKASI_FILE_KAS = './kas.txt';
 const LOKASI_FILE_INFO = './informasi.txt';
 const LOKASI_FILE_TODO = './todo.txt';
 const LOKASI_FILE_SALDO = './saldo.txt';
-const LOKASI_FILE_KALENDER_LOKAL = './kalender.jpeg'; // <-- PATH BARU KE FILE LOKAL
+const LOKASI_FILE_KALENDER_LOKAL = './kalender.jpeg'; // File gambar harus ada di folder ini
 // -------------------
 
 console.log("🤖 Memulai Bot...");
@@ -39,6 +38,8 @@ const client = new Client({
     }
 });
 
+// --- EVENT HANDLERS ---
+
 client.on('qr', (qr) => {
     console.log("==================================================");
     console.log("↓↓↓ SALIN SEMUA TEKS DI BAWAH INI ↓↓↓");
@@ -62,8 +63,8 @@ client.on('disconnected', (reason) => {
     client.initialize();
 });
 
+// --- FUNGSI BANTUAN ---
 
-// Fungsi bantuan untuk membaca file
 function bacaFile(path) {
     try {
         if (fs.existsSync(path)) {
@@ -76,7 +77,6 @@ function bacaFile(path) {
     }
 }
 
-// Fungsi bantuan untuk menulis file
 function tulisFile(path, konten) {
     try {
         fs.writeFileSync(path, konten, 'utf-8');
@@ -86,6 +86,8 @@ function tulisFile(path, konten) {
         return false;
     }
 }
+
+// --- TEKS FORMAT (JANGAN DIUBAH) ---
 
 const teksJadwal = `── .✦ JADWAL MATA KULIAH ⊹₊⟡⋆
 ---------------------------------------------
@@ -118,9 +120,8 @@ Widyah Novania S.Pd., M.Pd
 ➪ Statiska dan Probabilitas  (10:30-12:10)
 Yeskarwani Gulo S.Kom., M.Kom
 082388891691
-`
+`;
 
-// Teks bantuan yang diperbarui (perintah admin kalender dihapus)
 const teksBantuan = `🤖 *HEXABOT - Asisten Kelas* 🤖
 ---------------------------------------------
 Hai! Aku Hexabot, siap membantumu.
@@ -149,6 +150,7 @@ Berikut adalah perintah yang bisa kamu gunakan:
    
 ---------------------------------------------`;
 
+// --- LOGIKA UTAMA PESAN ---
 
 client.on('message', async (msg) => {
     const text = msg.body.toLowerCase() || '';
@@ -158,11 +160,12 @@ client.on('message', async (msg) => {
     // ==================================================
     // === PERINTAH UNTUK SEMUA ORANG ===
     // ==================================================
+
     if (text === '.help' || text === '.axa') {
         msg.reply(teksBantuan);
     }
 
-    if (text === '.jadwal') {
+    else if (text === '.jadwal') {
         msg.reply(teksJadwal);
     }
     
@@ -175,10 +178,12 @@ client.on('message', async (msg) => {
                     msg.reply("🎉 Hore! Tidak ada tugas saat ini.");
                     return;
                 }
+
                 let pesanTugas = "📚 *KUMPULAN TUGAS AKTIF* 📚\n";
                 pesanTugas += "-----------------------------------------\n\n";
+
                 tugasJson.forEach(matkul => {
-                    pesanTugas += `${matkul.nama}\n`; 
+                    pesanTugas += `${matkul.nama}\n`;
                     matkul.tugas.forEach((t, index) => {
                         const nomorEmoji = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"];
                         pesanTugas += `   ${nomorEmoji[index] || (index + 1) + '️⃣'} Tugas: ${t.deskripsi}\n`;
@@ -186,9 +191,11 @@ client.on('message', async (msg) => {
                         pesanTugas += `       > Catatan: ${t.catatan}\n\n`;
                     });
                 });
+
                 pesanTugas += "-----------------------------------------\n";
                 pesanTugas += "_Periksa kembali detail tugas sebelum dikumpulkan._";
                 msg.reply(pesanTugas);
+
             } catch (error) {
                 console.error("Error parsing tugas.json:", error);
                 msg.reply("Format data tugas sepertinya rusak. Mohon minta admin untuk memperbaikinya dengan `.update_tugas`");
@@ -204,8 +211,10 @@ client.on('message', async (msg) => {
         const tanggalHariIni = new Date().toLocaleDateString('id-ID', {
             day: 'numeric', month: 'long', year: 'numeric'
         });
+
         const saldoTampilan = saldo.trim() === '' ? '0' : saldo;
         const kasTampilan = daftarKas.trim() === '' ? '👍 _Semua iuran sudah tercatat._' : daftarKas.split('\n').map(nama => `🔴 ${nama.replace('-', '').trim()}`).join('\n');
+
         const pesanLaporan = `📊 *LAPORAN KEUANGAN KELAS* 📊
 _Data per ${tanggalHariIni}_
 ---------------------------------------------
@@ -221,6 +230,7 @@ ${kasTampilan}
 
 Untuk pembayaran atau konfirmasi, silakan hubungi Bendahara (*Grania*😏 & *Fandi*😎).
 Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
+
         msg.reply(pesanLaporan);
     } 
     
@@ -234,11 +244,10 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
         msg.reply(data.trim() === '' ? "✅ Semua agenda selesai." : `📋 *TO-DO LIST & AGENDA*\n\n${data}`);
     }
 
-    // --- PERINTAH .KALENDER (VERSI STATIS) ---
     else if (text === '.kalender') {
         try {
-            // Cek apakah file ada
             if (fs.existsSync(LOKASI_FILE_KALENDER_LOKAL)) {
+                msg.reply("⏳ Sedang mengambil gambar kalender...");
                 const media = MessageMedia.fromFilePath(LOKASI_FILE_KALENDER_LOKAL);
                 client.sendMessage(msg.from, media, { caption: 'Ini dia kalender perkuliahannya. 🗓️' });
             } else {
@@ -255,20 +264,24 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
     // ==================================================
     if (isAdmin) {
         
+        // --- CRUD TUGAS ---
         if (msg.body.startsWith('.update_tugas\n') || msg.body.startsWith('.update_tugas ')) {
             try {
-                const dataMentah = msg.body.substring(msg.body.indexOf(' ')).trim(); 
+                const dataMentah = msg.body.substring(msg.body.indexOf(' ')).trim();
                 const dataFinal = [];
                 const blokMatkul = dataMentah.split('///');
+
                 blokMatkul.forEach(blok => {
                     const baris = blok.trim().split('\n');
-                    const namaMatkul = baris.shift().trim(); 
-                    let tugasStrings = baris.join('\n').split(';;'); 
+                    const namaMatkul = baris.shift().trim();
+                    const tugasList = baris; 
+
                     const tugasObjek = {
                         nama: namaMatkul,
                         tugas: []
                     };
-                    tugasStrings.forEach(tugasString => {
+
+                    tugasList.forEach(tugasString => {
                         const detail = tugasString.trim().split('|');
                         if (detail.length === 3) {
                             tugasObjek.tugas.push({
@@ -282,6 +295,7 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
                        dataFinal.push(tugasObjek);
                     }
                 });
+                
                 if (tulisFile(LOKASI_FILE_TUGAS_JSON, JSON.stringify(dataFinal, null, 2))) {
                     msg.reply('✅ Seluruh daftar tugas dengan format baru berhasil diperbarui!');
                 } else {
@@ -289,7 +303,7 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
                 }
             } catch (e) {
                 console.error("Gagal parse tugas:", e);
-                msg.reply('❌ Terjadi kesalahan format. Pastikan format input benar.\nContoh:\n.update_tugas\n[Matkul]\n[Tugas 1]|[Deadline]|[Catatan]\n;;\n[Tugas 2]|[Deadline]|[Catatan]\n///\n[Matkul 2]\n...');
+                msg.reply('❌ Terjadi kesalahan format. Pastikan format input benar.');
             }
         } 
         
@@ -299,6 +313,7 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
             }
         }
         
+        // --- CRUD KAS ---
         else if (text.startsWith('.update_kas ')) {
             const konten = msg.body.substring(12);
             const format = konten.split(';').map(item => item.trim()).join('\n');
@@ -306,52 +321,50 @@ Terima kasih untuk semua yang sudah membayar tepat waktu! ✨`;
                 msg.reply('✅ Daftar kas berhasil diperbarui!');
             }
         } 
-        
         else if (text === '.hapus_kas') {
             if (tulisFile(LOKASI_FILE_KAS, '')) {
                 msg.reply('🗑️ Semua data kas berhasil dihapus!');
             }
         }
 
+        // --- CRUD SALDO ---
         else if (text.startsWith('.update_saldo ')) {
             const saldo = msg.body.substring(14);
             if (tulisFile(LOKASI_FILE_SALDO, saldo)) {
                 msg.reply(`✅ Saldo berhasil diperbarui menjadi Rp${saldo}`);
             }
         } 
-        
         else if (text === '.hapus_saldo') {
             if (tulisFile(LOKASI_FILE_SALDO, '0')) {
                 msg.reply('🗑️ Saldo berhasil direset menjadi Rp0.');
             }
         }
         
+        // --- CRUD INFO ---
         else if (text.startsWith('.update_info ')) {
             const konten = msg.body.substring(13);
             if (tulisFile(LOKASI_FILE_INFO, konten)) {
                 msg.reply('✅ Informasi berhasil diperbarui!');
             }
         } 
-        
         else if (text === '.hapus_info') {
             if (tulisFile(LOKASI_FILE_INFO, '')) {
                 msg.reply('🗑️ Informasi berhasil dihapus!');
             }
         }
 
+        // --- CRUD TODO ---
         else if (text.startsWith('.update_todo ')) {
-            const konten = msg.body.substring(12);
+            const konten = msg.body.substring(12); // Ambil semua teks setelah .update_todo
             if(tulisFile(LOKASI_FILE_TODO, konten)) {
                 msg.reply('✅ To-do list berhasil diperbarui!');
             }
         } 
-        
         else if (text === '.hapus_todo') {
             if(tulisFile(LOKASI_FILE_TODO, '')) {
                 msg.reply('🗑️ To-do list berhasil dihapus!');
             }
         }
-
     }
 });
 
